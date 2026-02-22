@@ -59,14 +59,16 @@ description: 從原始碼分析自動生成雙語 README。當使用者請求為
 
 ## 關鍵：必要輸出
 
-**務必生成兩個檔案 - 這是強制性的：**
+**務必生成四個檔案 - 這是強制性的：**
 
 | 檔案 | 語言 | 用途 |
 |------|----------|---------|
-| `README.md` | 英文 | 主要文件 |
-| `README.zh.md` | 繁體中文（ZH-TW） | 中文文件 |
+| `README.md` | 英文 | 主要文件（精簡，3 特色驅動） |
+| `README.zh.md` | 繁體中文（ZH-TW） | 中文文件（精簡，3 特色驅動） |
+| `doc.md` | 英文 | 詳細技術文件（安裝、使用、參考） |
+| `doc.zh.md` | 繁體中文（ZH-TW） | 中文詳細技術文件 |
 
-**絕不只生成一個檔案。兩個檔案都必須建立並儲存到專案目錄。**
+**絕不少於四個檔案。README 負責吸引人，doc 負責教會人。**
 
 ---
 
@@ -92,13 +94,14 @@ description: 從原始碼分析自動生成雙語 README。當使用者請求為
 2. 分析      →  在目標專案上執行 analyze_project.py
 3. 提取      →  從專案取得 {repo}、{package}、{year}（或使用 REPO_PATH 覆蓋）
 4. 檢視      →  檢查現有文件、LICENSE、範例
-5. 生成      →  首先建立 README.zh.md（中文）
-6. 翻譯      →  從中文版本建立 README.md
-7. 授權      →  生成 LICENSE 檔案：
+5. 選特色    →  從分析結果中提煉出 3 個最具代表性的專案特色
+6. 生成 README  →  首先建立 README.zh.md（中文），再翻譯為 README.md
+7. 生成 doc     →  首先建立 doc.zh.md（中文），再翻譯為 doc.md
+8. 授權      →  生成 LICENSE 檔案：
               - 若指定 LICENSE_TYPE → 使用指定類型
               - 若無 LICENSE 檔案且未指定 → 預設生成 MIT LICENSE
-8. 驗證      →  確認所有必要區段都存在
-9. 儲存      →  將檔案寫入專案根目錄
+9. 驗證      →  確認所有必要區段都存在
+10. 儲存     →  將檔案寫入專案根目錄
 ```
 
 ---
@@ -138,7 +141,30 @@ grep '^module' go.mod | awk '{print $2}'
 
 ---
 
-## 步驟 3：首先生成中文版本
+## 步驟 3：提煉 3 個專案特色
+
+**這是整份 README 的核心。** 從分析結果中識別出 3 個最能區分此專案的特色。
+
+### 特色選擇原則
+
+| 優先級 | 類型 | 範例 |
+|--------|------|------|
+| 最高 | 解決的核心問題 | 「透過統一 Agent 介面支援 5 家 AI 後端」 |
+| 高 | 獨特的技術手段 | 「安全指令執行：rm 自動移至 .Trash」 |
+| 中 | 開發者體驗差異 | 「互動式確認機制，支援 --allow 跳過」 |
+| 低 | 通用能力 | 「支援多種語言」（太泛，避免） |
+
+### 規則
+
+- **精確 3 個**，不多不少
+- 每個特色：一行標題（≤15 字）+ 一段說明（2-3 句純文字）
+- **不提供 code snippet** — 純文字描述核心價值
+- **不做細節展開** — 不列舉子功能、不解釋實作細節、不提供參數說明
+- 避免「支援 X、Y、Z」清單式描述，改為描述「這解決了什麼問題」
+
+---
+
+## 步驟 4：生成中文版本
 
 **使用精確的區段順序建立 `README.zh.md`：**
 
@@ -151,16 +177,13 @@ grep '^module' go.mod | awk '{print $2}'
 | 2 | 標題 + 徽章 | **是** | 標題 + 徽章 | **僅標題** |
 | 3 | 簡短描述 | **是** | ✓ | ✓ |
 | 4 | 目錄 | **是** | ✓ | ✓ |
-| 5 | 核心功能 | **是** | ✓ | ✓ |
-| 6 | 架構/流程圖 | 否 | ✓ | ✓ |
-| 7 | 安裝 | **是** | ✓ | ✓ |
-| 8 | 使用範例 | **是** | ✓ | ✓ |
-| 9 | 參考 | **是** | ✓ | ✓ |
-| 10 | 使用案例/情境 | 否 | ✓ | ✓ |
-| 11 | 授權 | **是** | ✓ | ✓ |
-| 12 | 作者 | **是** | ✓ | ✓ |
-| 13 | 星標歷史 | 否 | ✓ | **跳過** |
-| 14 | 版權頁尾 | 否 | ✓ | ✓ |
+| 5 | 功能特點（3 個特色）| **是** | ✓ | ✓ |
+| 6 | 架構（僅與特色相關）| 否 | ✓ | ✓ |
+| 7 | 檔案結構 | **是** | ✓ | ✓ |
+| 8 | 授權 | **是** | ✓ | ✓ |
+| 9 | 作者 | **是** | ✓ | ✓ |
+| 10 | 星標歷史 | 否 | ✓ | **跳過** |
+| 11 | 版權頁尾 | 否 | ✓ | ✓ |
 
 ---
 
@@ -195,6 +218,14 @@ grep '^module' go.mod | awk '{print $2}'
 # {repo}
 ```
 
+### 順序 3：簡短描述
+
+**一句話 tagline，直接說明「這是什麼 → 解決什麼問題」。不超過 2 句。**
+
+```markdown
+> 一句話描述專案核心價值
+```
+
 ### 順序 4：目錄
 
 **務必包含目錄區段。根據實際存在的區段動態生成。**
@@ -204,9 +235,8 @@ grep '^module' go.mod | awk '{print $2}'
 ## 目錄
 
 - [功能特點](#功能特點)
-- [安裝](#安裝)
-- [使用方法](#使用方法)
-- [{Reference Section Title}](#{reference-anchor})
+- [架構](#架構)
+- [檔案結構](#檔案結構)
 - [授權](#授權)
 - [Author](#author)
 - [Stars](#stars)
@@ -217,9 +247,8 @@ grep '^module' go.mod | awk '{print $2}'
 ## Table of Contents
 
 - [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [{Reference Section Title}](#{reference-anchor})
+- [Architecture](#architecture)
+- [File Structure](#file-structure)
 - [License](#license)
 - [Author](#author)
 - [Stars](#stars)
@@ -232,10 +261,102 @@ grep '^module' go.mod | awk '{print $2}'
 | 動態生成 | 根據文件中實際存在的區段生成目錄 |
 | 錨點格式（EN） | 小寫，將空格替換為 `-`，移除特殊字元 |
 | 錨點格式（ZH） | 保留原始中文字元作為錨點 |
-| 跳過區段 | 不要在目錄中包含順序 0（LLM 通知）、順序 1（封面）、順序 14（頁尾） |
+| 跳過區段 | 不要在目錄中包含順序 0（LLM 通知）、順序 1（封面）、順序 11（頁尾） |
 | 私有模式 | 從目錄中省略 `Stars` 項目 |
 
-### 順序 12：作者區段（絕不翻譯或修改）
+### 順序 5：功能特點（3 個特色 — 核心區段）
+
+**這是 README 最重要的區段。精確 3 個特色，每個特色自成一個子區段。純文字描述，不含 code snippet。**
+
+格式：
+
+```markdown
+## 功能特點
+
+### 特色標題 1（≤15 字）
+
+2-3 句純文字描述此特色解決的問題。不展開實作細節，不列舉子功能。
+
+### 特色標題 2
+
+2-3 句純文字描述。
+
+### 特色標題 3
+
+2-3 句純文字描述。
+```
+
+**規則：**
+- 純文字，不含 code snippet、不含 inline code 範例
+- 每個特色的描述 ≤ 3 句，聚焦在「解決什麼問題」而非「怎麼實作」
+- 不要出現 Installation 或 Usage 的獨立區段
+- 安裝指令（如需要）以單行 blockquote 形式放在功能特點區段最前面：
+
+```markdown
+## 功能特點
+
+> `go install github.com/{owner}/{repo}/cmd/cli@latest`
+
+### 特色標題 1
+...
+```
+
+### 順序 6：架構（可選，僅與特色相關）
+
+**只有當 Mermaid 圖表能直觀解釋特色之間的關係時才加入。**
+
+規則：
+- 圖表必須與順序 5 的 3 個特色直接相關
+- 不要畫出所有模組 — 只畫特色涉及的 flow
+- 圖表 node 數量 ≤ 15
+
+### 順序 7：檔案結構
+
+**展示專案核心的資料夾結構，幫助開發者快速理解專案組織。**
+
+格式：
+
+```markdown
+## 檔案結構
+
+\`\`\`
+{repo}/
+├── cmd/
+│   └── cli/
+│       └── main.go          # 進入點
+├── internal/
+│   ├── agents/              # Agent 實作
+│   ├── skill/               # Skill 掃描與解析
+│   └── tools/               # 工具執行器
+├── go.mod
+└── README.md
+\`\`\`
+```
+
+**規則：**
+- 深度 ≤ 3 層
+- 只列出有意義的目錄和關鍵檔案
+- 每個項目可附加簡短 inline 註解（`# 說明`）
+- 忽略 vendor、node_modules、.git 等
+- ZH 版本中註解使用中文，EN 版本使用英文
+
+### 順序 8：授權區段
+
+**英文（README.md）：**
+```markdown
+## License
+
+This project is licensed under the [MIT LICENSE](LICENSE).
+```
+
+**中文（README.zh.md）：**
+```markdown
+## 授權
+
+本專案採用 [MIT LICENSE](LICENSE)。
+```
+
+### 順序 9：作者區段（絕不翻譯或修改）
 
 **在兩個檔案中使用此精確格式：**
 ```markdown
@@ -252,7 +373,7 @@ grep '^module' go.mod | awk '{print $2}'
 </a>
 ```
 
-### 順序 13：星標歷史區段（僅公開模式）
+### 順序 10：星標歷史區段（僅公開模式）
 
 **在私有模式中完全跳過。**
 
@@ -262,7 +383,7 @@ grep '^module' go.mod | awk '{print $2}'
 [![Star](https://api.star-history.com/svg?repos={owner}/{repo}&type=Date)](https://www.star-history.com/#{owner}/{repo}&Date)
 ```
 
-### 順序 14：版權頁尾
+### 順序 11：版權頁尾
 
 ```markdown
 ***
@@ -324,13 +445,273 @@ grep '^module' go.mod | awk '{print $2}'
 
 ---
 
-## 程式碼區塊指南
+---
 
+## doc.md 詳細技術文件生成
+
+**README 精簡呈現 3 個特色吸引讀者，doc.md 則提供完整的技術細節讓使用者上手。**
+
+### doc.md 與 README 的分工
+
+| 內容 | README | doc.md |
+|------|--------|--------|
+| 專案是什麼、為什麼用 | ✓ | ✗ |
+| 3 個核心特色（純文字） | ✓ | ✗ |
+| 檔案結構 | ✓ | ✗ |
+| 安裝步驟（詳細） | ✗ | ✓ |
+| 使用方式（完整範例） | ✗ | ✓ |
+| CLI/API/設定參考 | ✗ | ✓ |
+| 環境變數 | ✗ | ✓ |
+| 進階用法 | ✗ | ✓ |
+
+### doc.md 區段順序（強制性）
+
+| 順序 | 區段 | 必要 | 說明 |
+|-------|---------|----------|------|
+| 0 | 標題 + 返回連結 | **是** | 連結回 README |
+| 1 | 前置需求 | **是** | 語言版本、系統需求、相依服務 |
+| 2 | 安裝 | **是** | 完整安裝步驟含所有方式 |
+| 3 | 設定 | 條件性 | 環境變數、設定檔（有才寫） |
+| 4 | 使用方式 | **是** | 基礎 → 進階的完整範例 |
+| 5 | 參考 | **是** | 依專案類型選擇對應的參考區段 |
+| 6 | 版權頁尾 | 否 | 同 README |
+
+### 順序 0：標題 + 返回連結
+
+**英文（doc.md）：**
+```markdown
+# {repo} - Documentation
+
+> Back to [README](./README.md)
+```
+
+**中文（doc.zh.md）：**
+```markdown
+# {repo} - 技術文件
+
+> 返回 [README](./README.zh.md)
+```
+
+### 順序 1：前置需求
+
+列出使用此專案所需的所有前置條件。
+
+```markdown
+## Prerequisites
+
+- Go 1.20 or higher
+- PostgreSQL 15+
+- At least one AI agent credential (GitHub Copilot subscription or API key)
+```
+
+**規則：**
+- 從 `go.mod`、`package.json`、`pyproject.toml` 等提取版本需求
+- 列出外部服務相依（資料庫、API、第三方服務）
+- 不解釋如何安裝這些前置條件（假設讀者知道）
+
+### 順序 2：安裝
+
+提供所有可用的安裝方式。
+
+```markdown
+## Installation
+
+### From Source
+
+\`\`\`bash
+git clone https://github.com/{owner}/{repo}.git
+cd {repo}
+go build -o {repo} cmd/cli/main.go
+\`\`\`
+
+### Using go install
+
+\`\`\`bash
+go install github.com/{owner}/{repo}/cmd/cli@latest
+\`\`\`
+```
+
+**規則：**
+- 列出所有安裝方式（source、package manager、binary release）
+- 每種方式都必須是可直接複製執行的完整指令
+- 從 `Makefile`、`Dockerfile`、`docker-compose.yml` 等推斷安裝方式
+
+### 順序 3：設定（條件性）
+
+**僅在專案有環境變數、設定檔或需要初始化設定時才包含。**
+
+```markdown
+## Configuration
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | No | OpenAI API key |
+| `ANTHROPIC_API_KEY` | No | Anthropic API key |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+
+### Config File
+
+Copy `.env.example` and fill in the values:
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+```
+
+**規則：**
+- 從 `.env.example`、`config.yaml`、原始碼中的 `os.Getenv()` 等提取
+- 標明 Required / Optional
+- 提供預設值（如有）
+
+### 順序 4：使用方式
+
+**從基礎到進階的完整使用範例。**
+
+```markdown
+## Usage
+
+### Basic
+
+\`\`\`bash
+./agent-skills list
+\`\`\`
+
+### Advanced
+
+\`\`\`bash
+./agent-skills run readme-generate "generate readme" --allow
+\`\`\`
+```
+
+**規則：**
+- 程式碼範例必須是完整可執行的
+- 包含預期輸出（如有意義）
+- 從 Basic → Advanced 漸進
+- 生產範例必須包含 error handling
 - 始終指定語言識別碼以進行語法突顯
 - 包含 import/require 陳述式
-- 保持範例最小化但完整
-- 生產範例必須包含錯誤處理
 - ZH 版本中翻譯註解，程式碼不變
+
+### 順序 5：參考
+
+**依專案類型選擇對應的參考區段。這是 doc.md 中最重要的區段。**
+
+#### 專案類型偵測
+
+| 偵測信號 | 專案類型 |
+|----------|----------|
+| `main()` + `flag`/`cobra`/`argparse` | CLI 工具 |
+| 僅匯出類型，無 `main()` | 函式庫 |
+| `plugin`/`middleware`/`hook` 模式 | 框架 |
+| `.config.json`/`.yaml` 範本 | 設定驅動 |
+| `Info.plist` / `AppDelegate` | 桌面/行動應用 |
+
+#### 依專案類型的參考區段標題
+
+| 專案類型 | EN 標題 | ZH-TW 標題 |
+|--------------|----------|-------------|
+| 函式庫/SDK | `## API Reference` | `## API 參考` |
+| CLI 工具 | `## CLI Reference` | `## 命令列參考` |
+| 框架 | `## Interface Reference` | `## 介面參考` |
+| 基於設定 | `## Configuration Reference` | `## 設定參考` |
+| 桌面應用程式 | `## Preferences Reference` | `## 偏好設定參考` |
+
+#### 參考區段內容
+
+| 專案類型 | 應包含的內容 |
+|----------|-------------|
+| 函式庫/SDK | 匯出的類型、函式、方法及其簽章、參數、回傳值 |
+| CLI 工具 | 指令表、旗標/選項表、子命令說明、環境變數 |
+| 框架 | 生命週期鉤子、中介軟體介面、外掛 API |
+| 基於設定 | 設定檔案結構及預設值和驗證規則 |
+
+**CLI 工具參考範例：**
+
+```markdown
+## CLI Reference
+
+### Commands
+
+| Command | Syntax | Description |
+|---------|--------|-------------|
+| `list` | `./app list` | List all installed skills |
+| `run` | `./app run <skill> <input> [--allow]` | Execute the specified skill |
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--allow` | Skip interactive confirmation prompts |
+
+### Built-in Tools
+
+| Tool | Parameters | Description |
+|------|------------|-------------|
+| `read_file` | `path` | Read file content at the specified path |
+| `write_file` | `path`, `content` | Write or create a file |
+```
+
+**函式庫 API 參考範例：**
+
+```markdown
+## API Reference
+
+### Agent Interface
+
+\`\`\`go
+type Agent interface {
+    Send(ctx context.Context, messages []Message, toolDefs []tools.Tool) (*Output, error)
+    Execute(ctx context.Context, skill *skill.Skill, userInput string, output io.Writer, allowAll bool) error
+}
+\`\`\`
+
+`Send` handles a single API call. `Execute` manages the complete skill execution loop with up to 128 tool call iterations.
+
+### NewScanner
+
+\`\`\`go
+func NewScanner() *Scanner
+\`\`\`
+
+Creates a skill scanner that concurrently scans all configured paths.
+```
+
+**規則：**
+- 從 analyze_project.py 的 types 和 functions 輸出中提取
+- 僅列出 exported / public API
+- 每個函式/方法都需要簽章和一句話說明
+- Table 格式優先，保持掃描性
+- 複雜的 interface 可用 code block 展示完整簽章
+
+### 順序 6：版權頁尾
+
+```markdown
+***
+
+©️ {year} [{author_name}]({author_url})
+```
+
+---
+
+## README 中連結 doc.md
+
+**在 README 的功能特點區段安裝指令旁，加入 doc 連結：**
+
+**中文（README.zh.md）：**
+```markdown
+## 功能特點
+
+> `go install github.com/{owner}/{repo}/cmd/cli@latest` · [完整文件](./doc.zh.md)
+```
+
+**英文（README.md）：**
+```markdown
+## Features
+
+> `go install github.com/{owner}/{repo}/cmd/cli@latest` · [Documentation](./doc.md)
+```
 
 ---
 
@@ -346,36 +727,6 @@ grep '^module' go.mod | awk '{print $2}'
 
 ---
 
-## 參考區段指南
-
-| 專案類型 | 參考內容 |
-|--------------|-------------------|
-| 函式庫/SDK | 匯出的類型、函式、方法及其簽章 |
-| CLI 工具 | 指令表、旗標/選項、環境變數 |
-| 框架 | 生命週期鉤子、中介軟體介面、外掛 API |
-| 基於設定 | 設定檔案結構及預設值和驗證 |
-| 桌面應用程式 | 偏好設定、快捷鍵、腳本 API（如有） |
-| 嵌入式/物聯網 | 通訊協定、硬體介面規格 |
-
-### 偵測啟發式
-- `main()` + `flag`/`cobra`/`argparse` → CLI 工具
-- 僅匯出類型，無 `main()` → 函式庫
-- `plugin`/`middleware`/`hook` 模式 → 框架
-- `.config.json`/`.yaml` 範本 → 設定驅動
-
-### 依專案類型的參考區段標題
-
-| 專案類型 | EN 標題 | ZH-TW 標題 |
-|--------------|----------|-------------|
-| 函式庫/SDK | `## API Reference` | `## API 參考` |
-| CLI 工具 | `## CLI Reference` | `## 命令列參考` |
-| 框架 | `## Interface Reference` | `## 介面參考` |
-| 基於設定 | `## Configuration Reference` | `## 設定參考` |
-| 桌面應用程式 | `## Preferences Reference` | `## 偏好設定參考` |
-| 嵌入式/物聯網 | `## Protocol Reference` | `## 協定參考` |
-
----
-
 ## LICENSE 生成
 
 ### 預設行為（無 LICENSE 檔案且未指定 LICENSE_TYPE）
@@ -383,21 +734,7 @@ grep '^module' go.mod | awk '{print $2}'
 **當專案目錄中不存在 LICENSE 檔案且使用者未指定 LICENSE_TYPE 時：**
 
 1. **自動生成 MIT LICENSE 檔案**並儲存到專案根目錄
-2. **在 README 授權區段使用預設文字：**
-
-**英文（README.md）：**
-```markdown
-## License
-
-This project is licensed under the [MIT LICENSE](LICENSE).
-```
-
-**中文（README.zh.md）：**
-```markdown
-## 授權
-
-本專案採用 [MIT LICENSE](LICENSE)。
-```
+2. **在 README 授權區段使用預設文字**
 
 ### 明確指定 LICENSE_TYPE
 
@@ -563,22 +900,37 @@ For licensing inquiries, contact: dev@pardn.io
 
 完成前，請驗證：
 
+### README（README.md + README.zh.md）
 - [ ] `README.zh.md` 已建立並儲存
 - [ ] `README.md` 已建立並儲存
-- [ ] **順序 0**：LLM 生成通知存在（任何封面圖片後的第一行）
+- [ ] **順序 0**：LLM 生成通知存在
 - [ ] **順序 2**：標題存在；徽章包含（公開）或省略（私有）
-- [ ] **順序 3**：引用格式的簡短描述
+- [ ] **順序 3**：引用格式的一句話描述
 - [ ] **順序 4**：目錄存在且具有正確的錨點
-- [ ] **順序 5**：核心功能區段存在
-- [ ] **順序 7**：安裝區段存在
-- [ ] **順序 8**：使用範例區段存在
-- [ ] **順序 11**：授權區段存在
-- [ ] **順序 12**：作者區段使用精確的固定格式（未翻譯）
-- [ ] **順序 13**：星標歷史包含（公開）或省略（私有）
+- [ ] **順序 5**：功能特點有精確 3 個特色子區段，純文字無 code snippet
+- [ ] **順序 5**：安裝指令 + doc 連結以 blockquote 形式嵌入
+- [ ] **順序 7**：檔案結構存在，深度 ≤ 3 層
+- [ ] **順序 8**：授權區段存在
+- [ ] **順序 9**：作者區段使用精確的固定格式（未翻譯）
+- [ ] **順序 10**：星標歷史包含（公開）或省略（私有）
+- [ ] **無獨立的 Installation、Usage、API Reference 區段**
+
+### doc（doc.md + doc.zh.md）
+- [ ] `doc.zh.md` 已建立並儲存
+- [ ] `doc.md` 已建立並儲存
+- [ ] **順序 0**：標題 + 返回 README 連結
+- [ ] **順序 1**：前置需求存在
+- [ ] **順序 2**：安裝區段存在，含所有可用方式
+- [ ] **順序 3**：設定區段存在（如專案有環境變數/設定檔）
+- [ ] **順序 4**：使用方式存在，從 Basic → Advanced
+- [ ] **順序 5**：參考區段存在，標題符合專案類型
+- [ ] 所有程式碼範例完整可執行，含 error handling
+- [ ] ZH 版本中程式碼註解已翻譯
+
+### 共通
 - [ ] 所有 `{owner}`、`{repo}`、`{package}`、`{year}` 佔位符已替換
-- [ ] 兩個檔案具有相同的區段結構
-- [ ] 所有程式碼區塊匹配（註解語言除外）
-- [ ] LICENSE 檔案存在且內容正確（指定 LICENSE_TYPE 或預設 MIT）
+- [ ] README 與 doc 的安裝指令一致
+- [ ] LICENSE 檔案存在且內容正確
 - [ ] [如果指定 REPO_PATH] 所有 URL 使用覆蓋的 owner/repo
 
 ---
@@ -590,36 +942,60 @@ For licensing inquiries, contact: dev@pardn.io
 **README.zh.md：**
 ```markdown
 > [!NOTE]
-> 此 README 由 Claude Code 生成，英文版請參閱 [這裡](./README.md)。
+> 此 README 由 [SKILL](https://github.com/pardnchiu/skill-readme-generate) 生成，英文版請參閱 [這裡](./README.md)。
 
 # {repo}
 
 [![pkg](https://pkg.go.dev/badge/github.com/pardnchiu/{repo}.svg)](https://pkg.go.dev/github.com/pardnchiu/{repo})
 [![license](https://img.shields.io/github/license/pardnchiu/{repo})](LICENSE)
 
-> 簡短描述（1-2 句）
+> 一句話描述核心價值
 
 ## 目錄
 
 - [功能特點](#功能特點)
-- [安裝](#安裝)
-- [使用方法](#使用方法)
-- [{Reference Section Title}](#{reference-anchor})
+- [架構](#架構)
+- [檔案結構](#檔案結構)
 - [授權](#授權)
 - [Author](#author)
 - [Stars](#stars)
 
 ## 功能特點
-...
 
-## 安裝
-...
+> `go install github.com/pardnchiu/{repo}/cmd/cli@latest` · [完整文件](./doc.zh.md)
 
-## 使用方法
-...
+### 特色 1 標題
 
-## {Reference Section Title}
-...
+2-3 句純文字描述。
+
+### 特色 2 標題
+
+2-3 句純文字描述。
+
+### 特色 3 標題
+
+2-3 句純文字描述。
+
+## 架構
+
+\`\`\`mermaid
+graph TB
+    ...
+\`\`\`
+
+## 檔案結構
+
+\`\`\`
+{repo}/
+├── cmd/
+│   └── cli/
+│       └── main.go          # 進入點
+├── internal/
+│   ├── agents/              # Agent 實作
+│   └── tools/               # 工具執行器
+├── go.mod
+└── README.md
+\`\`\`
 
 ## 授權
 
@@ -651,32 +1027,41 @@ For licensing inquiries, contact: dev@pardn.io
 **README.zh.md：**
 ```markdown
 > [!NOTE]
-> 此 README 由 Claude Code 生成，英文版請參閱 [這裡](./README.md)。
+> 此 README 由 [SKILL](https://github.com/pardnchiu/skill-readme-generate) 生成，英文版請參閱 [這裡](./README.md)。
 
 # {repo}
 
-> 簡短描述（1-2 句）
+> 一句話描述核心價值
 
 ## 目錄
 
 - [功能特點](#功能特點)
-- [安裝](#安裝)
-- [使用方法](#使用方法)
-- [{Reference Section Title}](#{reference-anchor})
+- [檔案結構](#檔案結構)
 - [授權](#授權)
 - [Author](#author)
 
 ## 功能特點
+
+> `go install github.com/pardnchiu/{repo}/cmd/cli@latest` · [完整文件](./doc.zh.md)
+
+### 特色 1 標題
+
 ...
 
-## 安裝
+### 特色 2 標題
+
 ...
 
-## 使用方法
+### 特色 3 標題
+
 ...
 
-## {Reference Section Title}
-...
+## 檔案結構
+
+\`\`\`
+{repo}/
+├── ...
+\`\`\`
 
 ## 授權
 
@@ -693,6 +1078,108 @@ For licensing inquiries, contact: dev@pardn.io
 </a> <a href="https://linkedin.com/in/pardnchiu" target="_blank">
 <img src="https://pardn.io/image/linkedin.svg" width="48" height="48">
 </a>
+
+***
+
+©️ {year} [邱敬幃 Pardn Chiu](https://linkedin.com/in/pardnchiu)
+```
+
+### doc.md 範例（以 CLI 工具為例）
+
+**doc.zh.md：**
+```markdown
+# {repo} - 技術文件
+
+> 返回 [README](./README.zh.md)
+
+## 前置需求
+
+- Go 1.20 或更高版本
+- 至少一組 AI agent 憑證（GitHub Copilot 訂閱或 API key）
+
+## 安裝
+
+### 從原始碼建置
+
+\`\`\`bash
+git clone https://github.com/{owner}/{repo}.git
+cd {repo}
+go build -o {repo} cmd/cli/main.go
+\`\`\`
+
+### 使用 go install
+
+\`\`\`bash
+go install github.com/{owner}/{repo}/cmd/cli@latest
+\`\`\`
+
+## 設定
+
+### 環境變數
+
+| 變數 | 必要 | 說明 |
+|------|------|------|
+| `OPENAI_API_KEY` | 否 | OpenAI API 金鑰 |
+| `ANTHROPIC_API_KEY` | 否 | Anthropic API 金鑰 |
+
+複製 `.env.example` 並填入對應值：
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+## 使用方式
+
+### 基礎用法
+
+列出所有可用的 Skill：
+
+\`\`\`bash
+./{repo} list
+\`\`\`
+
+### 執行 Skill
+
+\`\`\`bash
+# 互動模式（每次 tool call 前確認）
+./{repo} run commit-generate "generate commit message"
+
+# 自動模式（跳過確認）
+./{repo} run readme-generate "generate readme" --allow
+\`\`\`
+
+## 命令列參考
+
+### 指令
+
+| 指令 | 語法 | 說明 |
+|------|------|------|
+| `list` | `./{repo} list` | 列出所有已安裝的 Skill |
+| `run` | `./{repo} run <skill> <input> [--allow]` | 執行指定的 Skill |
+
+### 旗標
+
+| 旗標 | 說明 |
+|------|------|
+| `--allow` | 跳過互動式確認提示 |
+
+### 支援的 Agent
+
+| Agent | 認證方式 | 預設模型 | 環境變數 |
+|-------|----------|----------|----------|
+| GitHub Copilot | Device code 登入 | `gpt-4.1` | - |
+| OpenAI | API Key | `gpt-5-nano` | `OPENAI_API_KEY` |
+| Claude | API Key | `claude-sonnet-4-5` | `ANTHROPIC_API_KEY` |
+
+### 內建工具
+
+| 工具 | 參數 | 說明 |
+|------|------|------|
+| `read_file` | `path` | 讀取指定路徑的檔案內容 |
+| `list_files` | `path`, `recursive` | 列出目錄內容 |
+| `write_file` | `path`, `content` | 寫入或建立檔案 |
+| `search_content` | `pattern`, `file_pattern` | 使用 regex 搜尋檔案內容 |
+| `run_command` | `command` | 執行白名單內的 shell 指令 |
 
 ***
 
