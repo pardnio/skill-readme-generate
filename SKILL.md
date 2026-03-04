@@ -220,10 +220,28 @@ grep '^module' go.mod | awk '{print $2}'
 
 ### 順序 3：簡短描述
 
-**一句話 tagline，直接說明「這是什麼 → 解決什麼問題」。不超過 2 句。**
+**使用固定格式，依據專案原始碼內容重新分析並生成，每次執行都必須更新。**
+
+格式（英文）：
+```
+A [tech] [what it is] with [key feature 1], [key feature 2], and [key feature 3]
+```
+- 不超過 20 個英文單字，句尾不加句號
+- `[tech]` = 主要技術框架或語言（e.g., `Go`, `Claude Code`, `Node.js`）
+- `[what it is]` = 產品類型（e.g., `CLI tool`, `skill`, `library`）
+- `[key feature 1~3]` = 從原始碼分析中提煉的 3 個最具代表性特色（名詞片語）
+
+格式（中文）：
+- 長度與英文版相當（約 20–26 個中文字）
+- 結構對應英文，但以中文慣用語表達
+- 句尾不加句號
 
 ```markdown
-> 一句話描述專案核心價值
+> A [tech] [what it is] with [key feature 1], [key feature 2], and [key feature 3]
+```
+
+```markdown
+> [tech] [產品類型]，具備 [特色 1]、[特色 2] 與 [特色 3]
 ```
 
 ### 順序 4：目錄
