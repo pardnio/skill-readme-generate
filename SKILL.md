@@ -59,7 +59,7 @@ description: 從原始碼分析自動生成雙語 README。當使用者請求為
 
 ## 關鍵：必要輸出
 
-**務必生成四個檔案 - 這是強制性的：**
+**務必生成六個檔案 - 這是強制性的：**
 
 | 檔案 | 語言 | 用途 |
 |------|----------|---------|
@@ -67,8 +67,10 @@ description: 從原始碼分析自動生成雙語 README。當使用者請求為
 | `doc/README.zh.md` | 繁體中文（ZH-TW） | 中文文件（精簡，特色驅動） |
 | `doc/doc.md` | 英文 | 詳細技術文件（安裝、使用、參考） |
 | `doc/doc.zh.md` | 繁體中文（ZH-TW） | 中文詳細技術文件 |
+| `doc/architecture.md` | 英文 | 詳細架構圖（完整 Mermaid） |
+| `doc/architecture.zh.md` | 繁體中文（ZH-TW） | 中文詳細架構圖 |
 
-**絕不少於四個檔案。README 負責吸引人，doc 負責教會人。**
+**絕不少於六個檔案。README 負責吸引人，doc 負責教會人，architecture 負責畫清楚。**
 
 ---
 
@@ -95,13 +97,14 @@ description: 從原始碼分析自動生成雙語 README。當使用者請求為
 3. 提取      →  從專案取得 {repo}、{package}、{year}（或使用 REPO_PATH 覆蓋）
 4. 檢視      →  檢查現有文件、LICENSE、範例
 5. 選特色    →  從分析結果中提煉出所有精妙且具代表性的專案特色
-6. 生成 README  →  首先建立 README.zh.md（中文），再翻譯為 README.md
-7. 生成 doc     →  首先建立 doc.zh.md（中文），再翻譯為 doc.md
-8. 授權      →  生成 LICENSE 檔案：
+6. 生成 README        →  首先建立 README.zh.md（中文），再翻譯為 README.md
+7. 生成 doc           →  首先建立 doc.zh.md（中文），再翻譯為 doc.md
+8. 生成 architecture  →  首先建立 architecture.zh.md（中文），再翻譯為 architecture.md
+9. 授權      →  生成 LICENSE 檔案：
               - 若指定 LICENSE_TYPE → 使用指定類型
               - 若無 LICENSE 檔案且未指定 → 預設生成 MIT LICENSE
-9. 驗證      →  確認所有必要區段都存在
-10. 儲存     →  README.md 寫入專案根目錄；README.zh.md / doc.md / doc.zh.md 寫入 doc/ 子目錄（自動建立）
+10. 驗證     →  確認所有必要區段都存在
+11. 儲存     →  README.md 寫入專案根目錄；其餘檔案寫入 doc/ 子目錄（自動建立）
 ```
 
 ---
@@ -358,14 +361,40 @@ A [tech] [what it is] with [key feature 1], [key feature 2], and [key feature 3]
 ...
 ```
 
-### 順序 6：架構（可選，僅與特色相關）
+### 順序 6：架構（概覽版 + 連結詳細版）
 
-**只有當 Mermaid 圖表能直觀解釋特色之間的關係時才加入。**
+**README 中的架構圖為精簡概覽版，詳細版放在 `doc/architecture.md`。**
 
-規則：
-- 圖表必須與順序 5 的特色直接相關
-- 不要畫出所有模組 — 只畫特色涉及的 flow
-- 圖表 node 數量 ≤ 15
+**英文（README.md）：**
+```markdown
+## Architecture
+
+> [Full Architecture](./doc/architecture.md)
+
+\`\`\`mermaid
+graph TB
+    A[Input] --> B[Core]
+    B --> C[Output]
+\`\`\`
+```
+
+**中文（README.zh.md）：**
+```markdown
+## 架構
+
+> [完整架構](./architecture.zh.md)
+
+\`\`\`mermaid
+graph TB
+    A[輸入] --> B[核心]
+    B --> C[輸出]
+\`\`\`
+```
+
+**README 架構圖規則：**
+- Node 數量 **≤ 10**，只畫主要模組間的關係
+- 不展開內部細節，用單一 node 代表整個子系統
+- 必須附上連結指向詳細版
 
 ### 順序 7：檔案結構
 
@@ -785,6 +814,136 @@ Creates a skill scanner that concurrently scans all configured paths.
 
 ---
 
+## architecture.md 詳細架構文件生成
+
+**README 的架構圖是概覽，architecture.md 負責完整呈現專案的模組關係與資料流。**
+
+### architecture.md 與 README 架構的分工
+
+| 內容 | README 架構 | architecture.md |
+|------|-------------|-----------------|
+| 主要模組概覽 | ✓（≤10 nodes） | ✓ |
+| 模組內部結構 | ✗ | ✓ |
+| 資料流 / 請求流程 | 簡化 | 完整 |
+| 介面 / 型別關係 | ✗ | ✓ |
+| 狀態轉換 | ✗ | ✓（如適用） |
+| 第三方整合 | ✗ | ✓ |
+
+### architecture.md 區段順序（強制性）
+
+| 順序 | 區段 | 必要 | 說明 |
+|-------|---------|----------|------|
+| 0 | 標題 + 返回連結 | **是** | 連結回 README |
+| 1 | 概覽圖 | **是** | 全域 Mermaid 圖（與 README 架構圖相同或稍詳細） |
+| 2 | 模組詳細圖 | **是** | 每個核心模組一張 Mermaid 圖 |
+| 3 | 資料流 | 條件性 | 請求 / 資料處理流程（如適用） |
+| 4 | 狀態機 | 條件性 | 有限狀態機（如適用） |
+| 5 | 版權頁尾 | 否 | 同 README |
+
+### 順序 0：標題 + 返回連結
+
+**英文（architecture.md）：**
+```markdown
+# {repo} - Architecture
+
+> Back to [README](../README.md)
+```
+
+**中文（architecture.zh.md）：**
+```markdown
+# {repo} - 架構
+
+> 返回 [README](./README.zh.md)
+```
+
+### 順序 1：概覽圖
+
+**與 README 順序 6 的概覽圖相同或稍詳細，作為 architecture.md 的入口。**
+
+```markdown
+## Overview
+
+\`\`\`mermaid
+graph TB
+    ...
+\`\`\`
+```
+
+### 順序 2：模組詳細圖
+
+**針對每個核心模組，各自畫一張 Mermaid 圖，展現內部結構與對外介面。**
+
+```markdown
+## Module: {ModuleName}
+
+{一句話描述此模組的職責}
+
+\`\`\`mermaid
+graph TB
+    subgraph {ModuleName}
+        A[Component A] --> B[Component B]
+        B --> C[Component C]
+    end
+    External[External Dependency] --> A
+\`\`\`
+```
+
+**規則：**
+- 每個模組一個 `## Module:` 區段
+- 使用 `subgraph` 框出模組邊界
+- 標示對外的 input / output 與相依
+- 可使用 `classDiagram` 展示型別關係（如函式庫專案）
+
+### 順序 3：資料流（條件性）
+
+**當專案有明確的請求 / 資料處理流程時，使用序列圖或流程圖呈現。**
+
+```markdown
+## Data Flow
+
+\`\`\`mermaid
+sequenceDiagram
+    participant Client
+    participant Handler
+    participant Service
+    participant DB
+    Client->>Handler: Request
+    Handler->>Service: Process
+    Service->>DB: Query
+    DB-->>Service: Result
+    Service-->>Handler: Response
+    Handler-->>Client: Reply
+\`\`\`
+```
+
+### 順序 4：狀態機（條件性）
+
+**當專案有狀態管理邏輯時，使用狀態圖呈現。**
+
+```markdown
+## State Machine
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Running: Start
+    Running --> Done: Complete
+    Running --> Failed: Error
+    Failed --> Idle: Retry
+    Done --> [*]
+\`\`\`
+```
+
+### architecture.md 規則總結
+
+- **不限 node 數量**，但每張圖保持可讀性（建議單圖 ≤ 30 nodes）
+- 過大的圖拆成多張，每張聚焦一個模組或流程
+- ZH 版本中 Mermaid node label 使用中文，圖表結構不變
+- 從 `analyze_project.py` 的 types / functions 輸出推斷模組結構
+- 先建立 `architecture.zh.md`（中文），再翻譯為 `architecture.md`
+
+---
+
 ## LICENSE 生成
 
 ### 預設行為（無 LICENSE 檔案且未指定 LICENSE_TYPE）
@@ -986,6 +1145,17 @@ For licensing inquiries, contact: dev@pardn.io
 - [ ] 所有程式碼範例完整可執行，含 error handling
 - [ ] ZH 版本中程式碼註解已翻譯
 
+### architecture（architecture.md + architecture.zh.md）
+- [ ] `doc/architecture.zh.md` 已建立並儲存
+- [ ] `doc/architecture.md` 已建立並儲存
+- [ ] **順序 0**：標題 + 返回 README 連結
+- [ ] **順序 1**：概覽圖存在
+- [ ] **順序 2**：每個核心模組各有一張詳細 Mermaid 圖
+- [ ] **順序 3**：資料流圖存在（如適用）
+- [ ] **順序 4**：狀態機圖存在（如適用）
+- [ ] ZH 版本中 Mermaid node label 已翻譯為中文
+- [ ] README 順序 6 架構區段已附上連結指向此文件
+
 ### 共通
 - [ ] 所有 `{owner}`、`{repo}`、`{package}`、`{year}` 佔位符已替換
 - [ ] README 與 doc 的安裝指令一致
@@ -1053,9 +1223,12 @@ For licensing inquiries, contact: dev@pardn.io
 
 ## 架構
 
+> [完整架構](./architecture.zh.md)
+
 \`\`\`mermaid
 graph TB
-    ...
+    A[...] --> B[...]
+    B --> C[...]
 \`\`\`
 
 ## 檔案結構
