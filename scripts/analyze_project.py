@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
 Analyze project structure and extract API information for README generation.
-Supports: Go, Python, JavaScript/TypeScript, PHP, Swift
+
+Full extraction: Python (ast), Go (regex), JavaScript, TypeScript (regex).
+Detected only (file listing): PHP, Swift.
 """
 
+import ast
 import json
 import os
 import re
@@ -199,11 +202,97 @@ def extract_go_info(root: Path) -> ProjectAnalysis:
     return analysis
 
 
+def _format_py_args(args: ast.arguments) -> str:
+    parts: list[str] = []
+    positional = args.args
+    num_positional = len(positional)
+    num_defaults = len(args.defaults)
+    default_start = num_positional - num_defaults
+
+    for i, arg in enumerate(positional):
+        piece = arg.arg
+        if arg.annotation is not None:
+            piece += f": {ast.unparse(arg.annotation)}"
+        if i >= default_start:
+            piece += f" = {ast.unparse(args.defaults[i - default_start])}"
+        parts.append(piece)
+
+    if args.vararg is not None:
+        piece = f"*{args.vararg.arg}"
+        if args.vararg.annotation is not None:
+            piece += f": {ast.unparse(args.vararg.annotation)}"
+        parts.append(piece)
+    elif args.kwonlyargs:
+        parts.append("*")
+
+    for arg, default in zip(args.kwonlyargs, args.kw_defaults):
+        piece = arg.arg
+        if arg.annotation is not None:
+            piece += f": {ast.unparse(arg.annotation)}"
+        if default is not None:
+            piece += f" = {ast.unparse(default)}"
+        parts.append(piece)
+
+    if args.kwarg is not None:
+        piece = f"**{args.kwarg.arg}"
+        if args.kwarg.annotation is not None:
+            piece += f": {ast.unparse(args.kwarg.annotation)}"
+        parts.append(piece)
+
+    return ", ".join(parts)
+
+
+def _build_py_function(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, file: str
+) -> FunctionInfo:
+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
+    args_str = _format_py_args(node.args)
+    ret_str = f" -> {ast.unparse(node.returns)}" if node.returns is not None else ""
+    signature = f"{prefix} {node.name}({args_str}){ret_str}"
+    return FunctionInfo(
+        name=node.name,
+        signature=signature,
+        doc=ast.get_docstring(node) or "",
+        exported=True,
+        file=file,
+        line=node.lineno,
+    )
+
+
+def _build_py_class(node: ast.ClassDef, file: str) -> TypeInfo:
+    fields: list[dict] = []
+    for item in node.body:
+        if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+            fname = item.target.id
+            if fname.startswith("_"):
+                continue
+            ftype = ast.unparse(item.annotation) if item.annotation is not None else ""
+            fields.append({"name": fname, "type": ftype, "tag": ""})
+        elif isinstance(item, ast.Assign):
+            for tgt in item.targets:
+                if isinstance(tgt, ast.Name) and not tgt.id.startswith("_"):
+                    fields.append({"name": tgt.id, "type": "", "tag": ""})
+
+    decorators = [ast.unparse(d) for d in node.decorator_list]
+    kind = "class"
+    for dec in decorators:
+        if dec == "dataclass" or dec.endswith(".dataclass") or dec.startswith("dataclass("):
+            kind = "dataclass"
+            break
+
+    return TypeInfo(
+        name=node.name,
+        kind=kind,
+        fields=fields,
+        doc=ast.get_docstring(node) or "",
+        file=file,
+    )
+
+
 def extract_python_info(root: Path) -> ProjectAnalysis:
-    """Extract Python project information."""
+    """Extract Python project information via the `ast` module."""
     analysis = ProjectAnalysis(language="python", name=root.name)
 
-    # Parse pyproject.toml or setup.py
     pyproject = root / "pyproject.toml"
     if pyproject.exists():
         content = pyproject.read_text()
@@ -211,8 +300,16 @@ def extract_python_info(root: Path) -> ProjectAnalysis:
             analysis.name = m.group(1)
         if m := re.search(r'version\s*=\s*["\']([^"\']+)["\']', content):
             analysis.version = m.group(1)
+        if m := re.search(r'description\s*=\s*["\']([^"\']+)["\']', content):
+            analysis.description = m.group(1)
+        # Naive [project.dependencies] extraction
+        dep_block = re.search(
+            r"dependencies\s*=\s*\[([^\]]*)\]", content, re.DOTALL
+        )
+        if dep_block:
+            for m in re.finditer(r'["\']([^"\'<>=!~;\s]+)', dep_block.group(1)):
+                analysis.dependencies.append(m.group(1))
 
-    # Parse .py files
     for py_file in root.rglob("*.py"):
         if any(p in py_file.parts for p in IGNORE_DIRS):
             continue
@@ -221,43 +318,25 @@ def extract_python_info(root: Path) -> ProjectAnalysis:
         analysis.files.append(rel_path)
 
         try:
-            content = py_file.read_text()
-        except:
+            source = py_file.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
             continue
 
-        # Extract classes
-        class_pattern = r'(?:"""([^"]+)"""\s*\n)?class\s+(\w+)(?:\(([^)]*)\))?:'
-        for m in re.finditer(class_pattern, content):
-            doc, name, bases = m.groups()
-            if not name.startswith("_"):
-                analysis.types.append(
-                    TypeInfo(
-                        name=name,
-                        kind="class",
-                        doc=doc.strip() if doc else "",
-                        file=rel_path,
-                    )
-                )
+        try:
+            tree = ast.parse(source, filename=str(py_file))
+        except SyntaxError:
+            continue
 
-        # Extract functions
-        func_pattern = (
-            r'(?:"""([^"]+)"""\s*\n\s*)?def\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*(\S+))?:'
-        )
-        for m in re.finditer(func_pattern, content):
-            doc, name, params, ret = m.groups()
-            if not name.startswith("_"):
-                sig = f"def {name}({params})"
-                if ret:
-                    sig += f" -> {ret}"
-                analysis.functions.append(
-                    FunctionInfo(
-                        name=name,
-                        signature=sig,
-                        exported=True,
-                        doc=doc.strip() if doc else "",
-                        file=rel_path,
-                    )
-                )
+        # Module-level definitions only; nested classes/functions are internal.
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef):
+                if node.name.startswith("_"):
+                    continue
+                analysis.types.append(_build_py_class(node, rel_path))
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if node.name.startswith("_"):
+                    continue
+                analysis.functions.append(_build_py_function(node, rel_path))
 
     return analysis
 
